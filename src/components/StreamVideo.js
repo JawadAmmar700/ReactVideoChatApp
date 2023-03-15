@@ -1,7 +1,7 @@
-import React, { useState, useEffect, useRef } from "react"
-import Peer from "peerjs"
-import io from "socket.io-client"
-import { useHistory } from "react-router-dom"
+import React, { useState, useEffect, useRef } from "react";
+import Peer from "peerjs";
+import io from "socket.io-client";
+import { useHistory } from "react-router-dom";
 import {
   MicrophoneIcon,
   VideoCameraIcon,
@@ -10,11 +10,12 @@ import {
   InformationCircleIcon,
   ChatAlt2Icon,
   UserGroupIcon,
-} from "@heroicons/react/outline"
-import { ArrowCircleRightIcon } from "@heroicons/react/solid"
-import { ToastContainer, toast } from "react-toastify"
-import "react-toastify/dist/ReactToastify.css"
-const socket = io(process.env.REACT_APP_SERVER)
+} from "@heroicons/react/outline";
+import { ArrowCircleRightIcon } from "@heroicons/react/solid";
+import { ToastContainer, toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
+import { peerConfiguration } from "../lib/config";
+const socket = io(process.env.REACT_APP_SERVER_APP);
 
 const peerConfig = {
   // !important use code below for loacl dev if the peer server is down or not working ⬇️
@@ -30,88 +31,88 @@ const peerConfig = {
   //   { urls: "stun:stun1.l.google.com:19302" },
   //   { urls: "stun:stun2.l.google.com:19302" },
   // ],
-}
-const peer = new Peer()
+};
+const peer = new Peer(peerConfiguration);
 
 const StreamVideo = ({ location }) => {
-  const [userId, setUserId] = useState(null)
-  const [users, setUsers] = useState([])
-  const [copied, setCopied] = useState(false)
-  const [openGroup, setOpenGroup] = useState(false)
-  const [openChat, setOpenChat] = useState(false)
-  const [messages, setMessages] = useState([])
-  const history = useHistory()
-  const roomId = location.pathname.split("/chat/")[1]
-  const myVideoRef = useRef()
-  const myVideoInstance = useRef()
-  const currentPeer = useRef([])
-  const messageRef = useRef()
+  const [userId, setUserId] = useState(null);
+  const [users, setUsers] = useState([]);
+  const [copied, setCopied] = useState(false);
+  const [openGroup, setOpenGroup] = useState(false);
+  const [openChat, setOpenChat] = useState(false);
+  const [messages, setMessages] = useState([]);
+  const history = useHistory();
+  const roomId = location.pathname.split("/chat/")[1];
+  const myVideoRef = useRef();
+  const myVideoInstance = useRef();
+  const currentPeer = useRef([]);
+  const messageRef = useRef();
 
   useEffect(() => {
-    let peerCalls = {}
-    peer.on("open", id => {
-      console.log("my id", id)
-      setUserId(id)
+    let peerCalls = {};
+    peer.on("open", (id) => {
+      console.log("my id", process.env.REACT_APP_SERVER);
+      setUserId(id);
       socket.emit("join-room", {
         username: localStorage.getItem("user"),
         roomId: roomId,
         userId: id,
         photoUrl: localStorage.getItem("userPhoto"),
-      })
-    })
-    __init__(peerCalls)
+      });
+    });
+    __init__(peerCalls);
 
-    socket.on("user-joined", otherUserId => {
+    socket.on("user-joined", (otherUserId) => {
       setTimeout(() => {
-        const call = peer.call(otherUserId, myVideoInstance.current)
-        const newUserVideo = document.createElement("video")
-        call.on("stream", newUserVideoStream => {
-          console.log("second", newUserVideoStream)
-          currentPeer.current.push(call.peerConnection)
+        const call = peer.call(otherUserId, myVideoInstance.current);
+        const newUserVideo = document.createElement("video");
+        call.on("stream", (newUserVideoStream) => {
+          console.log("second", newUserVideoStream);
+          currentPeer.current.push(call.peerConnection);
           peerCalls[otherUserId] = {
             call,
             newUserVideo,
-          }
-          appendUserVideoToDom(newUserVideo, newUserVideoStream)
-        })
+          };
+          appendUserVideoToDom(newUserVideo, newUserVideoStream);
+        });
 
         call.on("close", () => {
-          newUserVideo.remove()
-        })
-      }, 3000)
-    })
-    peer.on("call", call => {
-      call.answer(myVideoInstance.current)
-      call.on("stream", OtherThanYouVideoStream => {
-        console.log("first", OtherThanYouVideoStream)
-        const newUserVideo = document.createElement("video")
+          newUserVideo.remove();
+        });
+      }, 3000);
+    });
+    peer.on("call", (call) => {
+      call.answer(myVideoInstance.current);
+      call.on("stream", (OtherThanYouVideoStream) => {
+        console.log("first", OtherThanYouVideoStream);
+        const newUserVideo = document.createElement("video");
         if (!peerCalls[call.peer]) {
-          currentPeer.current.push(call.peerConnection)
-          appendUserVideoToDom(newUserVideo, OtherThanYouVideoStream)
+          currentPeer.current.push(call.peerConnection);
+          appendUserVideoToDom(newUserVideo, OtherThanYouVideoStream);
           peerCalls[call.peer] = {
             call,
             newUserVideo,
-          }
+          };
         }
-      })
-    })
+      });
+    });
     socket.on("user-left", (users, removeUserId) => {
-      setUsers(users)
-      peerCalls[removeUserId]?.call.close()
-      peerCalls[removeUserId]?.newUserVideo.remove()
-    })
-    socket.on("get-All-Users", users => {
-      setUsers(users)
-    })
+      setUsers(users);
+      peerCalls[removeUserId]?.call.close();
+      peerCalls[removeUserId]?.newUserVideo.remove();
+    });
+    socket.on("get-All-Users", (users) => {
+      setUsers(users);
+    });
     socket.on("receive-message", (message, username) => {
-      setMessages(messages => [...messages, { message, username }])
-    })
+      setMessages((messages) => [...messages, { message, username }]);
+    });
     socket.on("notify", (message, username) => {
-      toast.success(`${username}: ${message}`)
-    })
-  }, [])
+      toast.success(`${username}: ${message}`);
+    });
+  }, []);
 
-  const __init__ = peerCalls => {
+  const __init__ = (peerCalls) => {
     if (
       "mediaDevices" in navigator &&
       "getUserMedia" in navigator.mediaDevices
@@ -126,85 +127,87 @@ const StreamVideo = ({ location }) => {
             height: { min: 480, ideal: 720, max: 1080 },
           },
         })
-        .then(stream => {
-          myVideoInstance.current = stream
-          myVideoRef.current.srcObject = stream
-          myVideoRef.current.play()
-        })
+        .then((stream) => {
+          myVideoInstance.current = stream;
+          if (myVideoRef.current) {
+            myVideoRef.current.srcObject = stream;
+            myVideoRef.current.play();
+          }
+        });
     }
-  }
+  };
 
   const appendUserVideoToDom = (video, stream) => {
-    video.srcObject = stream
-    video.style.width = "500px"
-    video.play()
-    const VideoContainer = document.getElementById("videos")
-    VideoContainer.append(video)
-  }
+    video.srcObject = stream;
+    video.style.width = "500px";
+    video.play();
+    const VideoContainer = document.getElementById("videos");
+    VideoContainer.append(video);
+  };
 
   const endCall = () => {
-    socket.emit("end-call", userId, roomId)
-    socket.disconnect()
-    myVideoInstance.current.getTracks().forEach(track => track.stop())
-    history.push("/")
-  }
+    socket.emit("end-call", userId, roomId);
+    socket.disconnect();
+    myVideoInstance.current.getTracks().forEach((track) => track.stop());
+    history.push("/");
+  };
   const hideVideo = () => {
     myVideoInstance.current
       .getVideoTracks()
-      .forEach(track => (track.enabled = !track.enabled))
-  }
+      .forEach((track) => (track.enabled = !track.enabled));
+  };
   const mute = () => {
     myVideoInstance.current
       .getAudioTracks()
-      .forEach(track => (track.enabled = !track.enabled))
-  }
+      .forEach((track) => (track.enabled = !track.enabled));
+  };
 
   const copy = () => {
-    navigator.clipboard.writeText(roomId)
-    setCopied(true)
+    navigator.clipboard.writeText(roomId);
+    setCopied(true);
     setTimeout(() => {
-      setCopied(false)
-    }, 3000)
-  }
+      setCopied(false);
+    }, 3000);
+  };
 
   const shareScreen = () => {
     navigator.mediaDevices
       .getDisplayMedia({
         cursor: true,
       })
-      .then(stream => {
-        myVideoRef.current.srcObject = stream
-        myVideoRef.current.play()
-        let videoTracks = stream.getVideoTracks()[0]
-        currentPeer.current.forEach(peerConnection => {
+      .then((stream) => {
+        myVideoRef.current.srcObject = stream;
+        myVideoRef.current.play();
+        let videoTracks = stream.getVideoTracks()[0];
+        currentPeer.current.forEach((peerConnection) => {
           let sender = peerConnection
             .getSenders()
-            .find(s => s.track.kind === videoTracks.kind)
-          sender.replaceTrack(videoTracks)
-        })
+            .find((s) => s.track.kind === videoTracks.kind);
+          sender.replaceTrack(videoTracks);
+        });
 
         videoTracks.onended = () => {
-          myVideoRef.current.srcObject = myVideoInstance.current
-          myVideoRef.current.play()
-          let returnStream = myVideoInstance.current.getVideoTracks()[0]
-          currentPeer.current.forEach(peerConnection => {
+          myVideoRef.current.srcObject = myVideoInstance.current;
+          myVideoRef.current.play();
+          let returnStream = myVideoInstance.current.getVideoTracks()[0];
+          currentPeer.current.forEach((peerConnection) => {
             let returnSender = peerConnection
               .getSenders()
-              .find(s => s.track.kind === returnStream.kind)
-            returnSender.replaceTrack(returnStream)
-          })
-        }
+              .find((s) => s.track.kind === returnStream.kind);
+            returnSender.replaceTrack(returnStream);
+          });
+        };
       })
-      .catch(err => {
-        console.log(err)
-      })
-  }
+      .catch((err) => {
+        console.log(err);
+      });
+  };
 
-  const sendMessage = e => {
-    e.preventDefault()
-    socket.emit("send-message", messageRef.current.value, roomId)
-    messageRef.current.value = ""
-  }
+  const sendMessage = (e) => {
+    e.preventDefault();
+    socket.emit("send-message", messageRef.current.value, roomId);
+    messageRef.current.value = "";
+  };
 
   return (
     <div className="w-full relative flex items-center   min-h-screen bg-black">
@@ -267,8 +270,8 @@ const StreamVideo = ({ location }) => {
 
           <button
             onClick={() => {
-              setOpenChat(!openChat)
-              setOpenGroup(false)
+              setOpenChat(!openChat);
+              setOpenGroup(false);
             }}
           >
             <ChatAlt2Icon className="w-5 text-white cursor-pointer scale-100 hover:text-red-500" />
@@ -280,8 +283,8 @@ const StreamVideo = ({ location }) => {
           <button
             className="relative"
             onClick={() => {
-              setOpenGroup(!openGroup)
-              setOpenChat(false)
+              setOpenGroup(!openGroup);
+              setOpenChat(false);
             }}
           >
             {users.length > 0 && (
@@ -341,7 +344,7 @@ const StreamVideo = ({ location }) => {
         )}
       </div>
     </div>
-  )
-}
+  );
+};
 
-export default StreamVideo
+export default StreamVideo;

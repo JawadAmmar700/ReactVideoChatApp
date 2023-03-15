@@ -1,18 +1,17 @@
-import React, { useRef } from "react"
-import { v4 as uuidv4 } from "uuid"
-import { useHistory } from "react-router-dom"
-import { VideoCameraIcon } from "@heroicons/react/outline"
-import { signInWithPopup } from "firebase/auth"
-import useCheckIfUserIsLoggedIn from "../hooks/checkUser"
-import { auth } from "../firebase"
-import GoogleProvider from "../firebase"
-import Header from "./Header"
+import React, { useRef } from "react";
+import { v4 as uuidv4 } from "uuid";
+import { useHistory } from "react-router-dom";
+import { VideoCameraIcon } from "@heroicons/react/outline";
+import { signInWithPopup } from "firebase/auth";
+import useCheckIfUserIsLoggedIn from "../hooks/checkUser";
+import { auth } from "../firebase";
+import GoogleProvider from "../firebase";
+import Header from "./Header";
 
 const JoinRoom = () => {
-  const user = useCheckIfUserIsLoggedIn()
-  console.log(user)
-  const meetCode = useRef(null)
-  const history = useHistory()
+  const user = useCheckIfUserIsLoggedIn();
+  const meetCode = useRef(null);
+  const history = useHistory();
 
   return (
     <div>
@@ -37,10 +36,10 @@ const JoinRoom = () => {
           <button
             onClick={async () => {
               if (!user) {
-                await signInWithPopup(auth, GoogleProvider)
+                await signInWithPopup(auth, GoogleProvider);
               } else {
-                history.push(`/chat/` + uuidv4())
-                window.location.reload()
+                history.push(`/chat/` + uuidv4());
+                window.location.reload();
               }
             }}
             className="mt-12  px-2 py-3 space-x-2 bg-blue-600 flex items-center justify-center  rounded cursor-pointer w-44  hover:bg-blue-700 text-white "
@@ -57,9 +56,9 @@ const JoinRoom = () => {
           <button
             onClick={async () => {
               if (!user) {
-                await signInWithPopup(auth, GoogleProvider)
+                await signInWithPopup(auth, GoogleProvider);
               } else {
-                history.push(`/${meetCode.current.value}`)
+                history.push(`/${meetCode.current.value}`);
               }
             }}
             className="ml-2 text-gray-400 font-medium"
@@ -75,7 +74,7 @@ const JoinRoom = () => {
         </div>
       </div>
     </div>
-  )
-}
+  );
+};
 
-export default JoinRoom
+export default JoinRoom;
